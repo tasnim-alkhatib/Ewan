@@ -1,0 +1,6 @@
+@Ewan.API_HostAddress = http://localhost:5246
+
+GET {{Ewan.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

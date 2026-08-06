@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Ewan.API/Ewan.API.csproj" />
+  <Project Path="Ewan.Application/Ewan.Application.csproj" />
+  <Project Path="Ewan.Domain/Ewan.Domain.csproj" />
+  <Project Path="Ewan.Infrastructure/Ewan.Infrastructure.csproj" />
+</Solution>
