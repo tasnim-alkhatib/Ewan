@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ============ 1) Database ============
 builder.Services.AddDbContext<EwanDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ============ 2) Services (DI) ============
 builder.Services.AddScoped<IBannerService, BannerService>();

@@ -1,22 +1,23 @@
 version: "3.9"
 
 services:
-  # قاعدة بيانات SQL Server محلية جوه Docker - عشان تجرب بنفس بيئة الإنتاج تقريبًا
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: ewan-sqlserver
+  # قاعدة بيانات PostgreSQL محلية جوه Docker - نفس نوع القاعدة اللي هتشتغل بيها فعليًا على Railway
+  postgres:
+    image: postgres:16-alpine
+    container_name: ewan-postgres
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "Ewan@Strong_Pass123"
+      POSTGRES_DB: "EwanDB"
+      POSTGRES_USER: "ewan_admin"
+      POSTGRES_PASSWORD: "Ewan_Strong_Pass123"
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - ewan-sql-data:/var/opt/mssql
+      - ewan-pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"Ewan@Strong_Pass123\" -C -Q 'SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "pg_isready -U ewan_admin -d EwanDB"]
       interval: 10s
       retries: 10
-      start_period: 20s
+      start_period: 10s
 
   api:
     build:
@@ -24,11 +25,11 @@ services:
       dockerfile: Dockerfile
     container_name: ewan-api
     depends_on:
-      sqlserver:
+      postgres:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=EwanDB;User ID=sa;Password=Ewan@Strong_Pass123;TrustServerCertificate=True;"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=EwanDB;Username=ewan_admin;Password=Ewan_Strong_Pass123"
       AzureStorage__ConnectionString: "PUT-YOUR-REAL-AZURE-STORAGE-CONNECTION-STRING-HERE"
       AzureStorage__ContainerName: "media"
       Jwt__Issuer: "EwanHrApi"
@@ -38,4 +39,4 @@ services:
       - "8080:8080"
 
 volumes:
-  ewan-sql-data:
+  ewan-pg-data:
