@@ -1,5 +1,4 @@
 <Solution>
-  <Folder Name="/docs/" />
   <Folder Name="/Solution Items/">
     <File Path=".dockerignore" />
     <File Path="docker-compose.yml" />

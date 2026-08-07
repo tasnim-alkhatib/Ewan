@@ -17,7 +17,7 @@ builder.Services.AddDbContext<EwanDbContext>(options =>
 
 // ============ 2) Services (DI) ============
 builder.Services.AddScoped<IBannerService, BannerService>();
-builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IOfferService, IServiceItemService, IInquiryService...
 
 builder.Services.AddValidatorsFromAssembly(typeof(Ewan.Application.DTOs.Banners.UpsertBannerRequestValidator).Assembly);
