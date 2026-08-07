@@ -1,30 +1,107 @@
+using Ewan.Application.Interfaces;
+using Ewan.Infrastructure.Persistence;
+using Ewan.Infrastructure.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ============ 1) Database ============
+builder.Services.AddDbContext<EwanDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// ============ 2) Services (DI) ============
+builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+// سيب باقي الـ Services هنا لما تضيفها: IOfferService, IServiceItemService, IInquiryService...
+
+builder.Services.AddValidatorsFromAssembly(typeof(Ewan.Application.DTOs.Banners.UpsertBannerRequestValidator).Assembly);
+builder.Services.AddFluentValidationAutoValidation();
+
+// ============ 3) JWT Authentication (لوحة التحكم) ============
+var jwtSection = builder.Configuration.GetSection("Jwt");
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSection["Issuer"],
+            ValidAudience = jwtSection["Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSection["Key"]!))
+        };
+    });
+builder.Services.AddAuthorization();
+
+// ============ 4) CORS (عشان الفرونت React يقدر يكلم الـ API) ============
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendPolicy", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5173",              // Vite dev server
+                "http://localhost:3000",               // لو زميلتك مستخدمة CRA
+                "https://ewan-hr-admin.azurewebsites.net", // لوحة التحكم على Azure - عدّل الاسم حسب اللي تختاره فعليًا
+                "https://ewan-hr-web.azurewebsites.net"    // الموقع العام على Azure - نفس الملاحظة
+                                                           // لما يبقى عندكوا دومين حقيقي، ضيفه هنا وسيب رابط azurewebsites.net لحد ما تتأكدوا إن كل حاجة اتنقلت
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+// الـ Enums هتترجع كـ نص (زي "HomeSlider") بدل رقم (زي 1) في كل الـ Responses
+// ده أسهل بكتير على الفرونت، وبيظهر أوضح في Scalar
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
+
+// ============ 5) OpenAPI (الأساس اللي Scalar بيعرض منه) ============
+// ده الـ Endpoint المدمج في .NET 9 نفسه، بيولد وثيقة /openapi/v1.json تلقائي
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// تطبيق أي Migration جديدة تلقائيًا وقت تشغيل السيرفر - عملي جدًا في مرحلة البداية
+// من غير CI/CD Pipeline. لاحقًا لما يبقى عندكوا Staging/Production منفصلين، الأفضل
+// تشغّل الـ Migrations كخطوة منفصلة في الـ Pipeline بدل ما تحصل تلقائي هنا
+using (var scope = app.Services.CreateScope())
 {
-    app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("Ewan API")
-               .WithTheme(ScalarTheme.Moon);
-    });
+    var db = scope.ServiceProvider.GetRequiredService<EwanDbContext>();
+    db.Database.Migrate();
 }
 
+// ============ 6) تفعيل Scalar UI ============
+// شغالة بس في Development عادة، لو عايزها تفضل شغالة في الإنتاج شيل الـ if
+// ملحوظة مؤقتة: طول ما لسه معندكوش دومين وبيئات منفصلة (Staging/Production)،
+// سايبين Scalar شغالة دايمًا عشان زميلتك تقدر توصلها من رابط azurewebsites.net مباشرة.
+// لما تفصلوا البيئات بعدين، رجّع الشرط ده لـ: if (app.Environment.IsDevelopment())
+app.MapOpenApi();
+app.MapScalarApiReference(options =>
+{
+    options
+        .WithTitle("Ewan HR API")
+        .WithTheme(ScalarTheme.Purple)
+        .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Fetch);
+});
+// الواجهة هتفتح على: https://ewan-hr-api.azurewebsites.net/scalar/v1
+
 app.UseHttpsRedirection();
-
+app.UseCors("FrontendPolicy");
+app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

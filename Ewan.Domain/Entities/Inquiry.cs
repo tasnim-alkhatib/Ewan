@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Ewan.Domain.Enums;
 
 namespace Ewan.Domain.Entities
 {
@@ -11,9 +12,9 @@ namespace Ewan.Domain.Entities
         public string? Email { get; set; }
         public string? Message { get; set; }
 
-        //public Sector? Sector { get; set; }
-        //public InquirySource Source { get; set; }
-        //public InquiryStatus Status { get; set; } = InquiryStatus.New;
+        public Sector? Sector { get; set; }
+        public InquirySource Source { get; set; }
+        public InquiryStatus Status { get; set; } = InquiryStatus.New;
 
         public int? ServiceItemId { get; set; }
         public ServiceItem? ServiceItem { get; set; }

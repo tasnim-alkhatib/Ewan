@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Ewan.Domain.Enums;
 
 namespace Ewan.Domain.Entities
 {
     public class ServiceItem : BaseEntity
     {
-        //public Sector Sector { get; set; }
+        public Sector Sector { get; set; }
         public string NameAr { get; set; } = string.Empty;
         public string NameEn { get; set; } = string.Empty;
         public string? DescriptionAr { get; set; }
