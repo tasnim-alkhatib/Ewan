@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/appsettings.Development.json
+**/appsettings.json
+.git/
+.gitignore
+docs/
+*.md

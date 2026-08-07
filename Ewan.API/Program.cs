@@ -47,11 +47,11 @@ builder.Services.AddCors(options =>
     options.AddPolicy("FrontendPolicy", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5173",              // Vite dev server
-                "http://localhost:3000",               // لو زميلتك مستخدمة CRA
-                "https://ewan-hr-admin.azurewebsites.net", // لوحة التحكم على Azure - عدّل الاسم حسب اللي تختاره فعليًا
-                "https://ewan-hr-web.azurewebsites.net"    // الموقع العام على Azure - نفس الملاحظة
-                                                           // لما يبقى عندكوا دومين حقيقي، ضيفه هنا وسيب رابط azurewebsites.net لحد ما تتأكدوا إن كل حاجة اتنقلت
+                "http://localhost:5173",   // Vite dev server
+                "http://localhost:3000",   // لو زميلتك مستخدمة CRA
+                "https://ewan-hr-admin.up.railway.app", // لوحة التحكم على Railway - عدّل الاسم حسب اللي Railway هيديهولك فعليًا
+                "https://ewan-hr-web.up.railway.app"    // الموقع العام على Railway - نفس الملاحظة
+                                                        // لما يبقى عندكوا دومين حقيقي، ضيفه هنا وسيب رابط railway.app لحد ما تتأكدوا إن كل حاجة اتنقلت
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
@@ -96,7 +96,7 @@ app.MapScalarApiReference(options =>
         .WithTheme(ScalarTheme.Purple)
         .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Fetch);
 });
-// الواجهة هتفتح على: https://ewan-hr-api.azurewebsites.net/scalar/v1
+// الواجهة هتفتح على: https://your-app-name.up.railway.app/scalar/v1
 
 app.UseHttpsRedirection();
 app.UseCors("FrontendPolicy");

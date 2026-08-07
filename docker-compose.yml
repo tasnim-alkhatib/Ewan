@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  # قاعدة بيانات SQL Server محلية جوه Docker - عشان تجرب بنفس بيئة الإنتاج تقريبًا
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ewan-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Ewan@Strong_Pass123"
+    ports:
+      - "1433:1433"
+    volumes:
+      - ewan-sql-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"Ewan@Strong_Pass123\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 20s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ewan-api
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=EwanDB;User ID=sa;Password=Ewan@Strong_Pass123;TrustServerCertificate=True;"
+      AzureStorage__ConnectionString: "PUT-YOUR-REAL-AZURE-STORAGE-CONNECTION-STRING-HERE"
+      AzureStorage__ContainerName: "media"
+      Jwt__Issuer: "EwanHrApi"
+      Jwt__Audience: "EwanHrClient"
+      Jwt__Key: "PUT-A-LONG-RANDOM-SECRET-HERE-AT-LEAST-32-CHARS"
+    ports:
+      - "8080:8080"
+
+volumes:
+  ewan-sql-data:
