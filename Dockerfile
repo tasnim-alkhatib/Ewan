@@ -7,13 +7,13 @@ WORKDIR /src
 COPY src/Ewan.Domain/Ewan.Domain.csproj Ewan.Domain/
 COPY src/Ewan.Application/Ewan.Application.csproj Ewan.Application/
 COPY src/Ewan.Infrastructure/Ewan.Infrastructure.csproj Ewan.Infrastructure/
-COPY src/Ewan.Api/Ewan.Api.csproj Ewan.Api/
+COPY src/Ewan.API/Ewan.API.csproj Ewan.API/
 
-RUN dotnet restore Ewan.Api/Ewan.Api.csproj
+RUN dotnet restore Ewan.API/Ewan.API.csproj
 
 # دلوقتي ننسخ باقي الكود ونعمل Build فعلي
 COPY src/ .
-RUN dotnet publish Ewan.Api/Ewan.Api.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish Ewan.API/Ewan.API.csproj -c Release -o /app/publish --no-restore
 
 # ============ Stage 2: Runtime ============
 # نستخدم صورة الـ Runtime بس (مش الـ SDK) عشان الحجم النهائي يبقى أصغر بكتير
