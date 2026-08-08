@@ -17,7 +17,7 @@ RUN dotnet publish Ewan.API/Ewan.API.csproj -c Release -o /app/publish --no-rest
 
 # ============ Stage 2: Runtime ============
 # نستخدم صورة الـ Runtime بس (مش الـ SDK) عشان الحجم النهائي يبقى أصغر بكتير
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
 COPY --from=build /app/publish .
