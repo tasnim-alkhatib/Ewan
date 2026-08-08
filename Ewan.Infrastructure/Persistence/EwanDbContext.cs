@@ -5,6 +5,7 @@ using System.Reflection.Emit;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Ewan.Domain.Entities;
+using Ewan.Domain.Common;
 
 namespace Ewan.Infrastructure.Persistence
 {
