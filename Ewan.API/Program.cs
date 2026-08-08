@@ -4,6 +4,7 @@ using Ewan.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
@@ -17,8 +18,9 @@ builder.Services.AddDbContext<EwanDbContext>(options =>
 
 // ============ 2) Services (DI) ============
 builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
-// سيب باقي الـ Services هنا لما تضيفها: IOfferService, IServiceItemService, IInquiryService...
+// سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
 
 builder.Services.AddValidatorsFromAssembly(typeof(Ewan.Application.DTOs.Banners.UpsertBannerRequestValidator).Assembly);
 builder.Services.AddFluentValidationAutoValidation();
@@ -74,6 +76,14 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Railway (وأي منصة مشابهة) بتستقبل الطلبات بـ HTTPS من بره، وبتوصّلها للسيرفر بـ HTTP عادي من جوه.
+// من غير السطر ده، السيرفر هيفتكر إنه شغال على HTTP بس، وScalar هيكتب رابط http:// غلط،
+// والمتصفح هيرفض أي طلب منه (Mixed Content) زي اللي حصل دلوقتي بالظبط.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+
 // تطبيق أي Migration جديدة تلقائيًا وقت تشغيل السيرفر - عملي جدًا في مرحلة البداية
 // من غير CI/CD Pipeline. لاحقًا لما يبقى عندكوا Staging/Production منفصلين، الأفضل
 // تشغّل الـ Migrations كخطوة منفصلة في الـ Pipeline بدل ما تحصل تلقائي هنا
@@ -86,7 +96,7 @@ using (var scope = app.Services.CreateScope())
 // ============ 6) تفعيل Scalar UI ============
 // شغالة بس في Development عادة، لو عايزها تفضل شغالة في الإنتاج شيل الـ if
 // ملحوظة مؤقتة: طول ما لسه معندكوش دومين وبيئات منفصلة (Staging/Production)،
-// سايبين Scalar شغالة دايمًا عشان زميلتك تقدر توصلها من رابط azurewebsites.net مباشرة.
+// سايبين Scalar شغالة دايمًا عشان زميلتك تقدر توصلها من رابط Railway مباشرة.
 // لما تفصلوا البيئات بعدين، رجّع الشرط ده لـ: if (app.Environment.IsDevelopment())
 app.MapOpenApi();
 app.MapScalarApiReference(options =>
