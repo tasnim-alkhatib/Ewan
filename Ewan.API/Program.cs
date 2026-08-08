@@ -77,12 +77,16 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 // Railway (وأي منصة مشابهة) بتستقبل الطلبات بـ HTTPS من بره، وبتوصّلها للسيرفر بـ HTTP عادي من جوه.
-// من غير السطر ده، السيرفر هيفتكر إنه شغال على HTTP بس، وScalar هيكتب رابط http:// غلط،
-// والمتصفح هيرفض أي طلب منه (Mixed Content) زي اللي حصل دلوقتي بالظبط.
-app.UseForwardedHeaders(new ForwardedHeadersOptions
+// من غير السطر ده، السيرفر هيفتكر إنه شغال على HTTP بس، وScalar هيكتب رابط http:// غلط.
+// لازم نمسح قائمة "البروكسيات المعروفة" الافتراضية، لأنها بترفض أي Header جاي من بروكسي
+// مش مسجل فيها مسبقًا، وRailway مش مسجل فيها.
+var forwardedHeadersOptions = new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+};
+forwardedHeadersOptions.KnownNetworks.Clear();
+forwardedHeadersOptions.KnownProxies.Clear();
+app.UseForwardedHeaders(forwardedHeadersOptions);
 
 // تطبيق أي Migration جديدة تلقائيًا وقت تشغيل السيرفر - عملي جدًا في مرحلة البداية
 // من غير CI/CD Pipeline. لاحقًا لما يبقى عندكوا Staging/Production منفصلين، الأفضل
@@ -105,6 +109,15 @@ app.MapScalarApiReference(options =>
         .WithTitle("Ewan HR API")
         .WithTheme(ScalarTheme.Purple)
         .WithDefaultHttpClient(ScalarTarget.JavaScript, ScalarClient.Fetch);
+
+    // تحديد الرابط الصح يدويًا (مش اعتمادًا على تخمين البروتوكول من الـ Request)
+    // خدي بالك: لازم يكون عندك متغير PublicBaseUrl في Railway Variables بقيمة
+    // https://ewan-production.up.railway.app (بدون / في الآخر)
+    var publicBaseUrl = builder.Configuration["PublicBaseUrl"];
+    if (!string.IsNullOrWhiteSpace(publicBaseUrl))
+    {
+        options.AddServer(publicBaseUrl, "Production");
+    }
 });
 // الواجهة هتفتح على: https://your-app-name.up.railway.app/scalar/v1
 
