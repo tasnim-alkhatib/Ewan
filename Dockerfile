@@ -20,6 +20,8 @@ RUN dotnet publish Ewan.API/Ewan.API.csproj -c Release -o /app/publish --no-rest
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
 
 # Railway بيحدد البورت تلقائي عن طريق متغير PORT وقت التشغيل (مش وقت الـ Build)
