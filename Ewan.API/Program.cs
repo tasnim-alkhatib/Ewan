@@ -1,7 +1,10 @@
 using Ewan.Application.Interfaces;
 using Ewan.Infrastructure.Persistence;
 using Ewan.Infrastructure.Services;
+using Ewan.Domain.Enums;
 using FluentValidation;
+using Ewan.Application.DTOs.Auth;
+using Ewan.Domain.Entities;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -19,6 +22,7 @@ builder.Services.AddDbContext<EwanDbContext>(options =>
 // ============ 2) Services (DI) ============
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IOfferService, OfferService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
 
@@ -95,6 +99,29 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<EwanDbContext>();
     db.Database.Migrate();
+
+    // لو معندناش أي مستخدم في لوحة التحكم لسه، نعمل SuperAdmin أولي تلقائيًا
+    // من غير ده معندكيش أي طريقة تسجلي دخول بيها أول مرة
+    if (!db.AdminUsers.Any())
+    {
+        var seedEmail = builder.Configuration["SeedAdmin:Email"];
+        var seedPassword = builder.Configuration["SeedAdmin:Password"];
+
+        if (!string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword))
+        {
+            var admin = new AdminUser
+            {
+                FullName = "Super Admin",
+                Email = seedEmail.ToLower(),
+                Role = AdminRole.SuperAdmin
+            };
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Ewan.Domain.Entities.AdminUser>();
+            admin.PasswordHash = hasher.HashPassword(admin, seedPassword);
+
+            db.AdminUsers.Add(admin);
+            db.SaveChanges();
+        }
+    }
 }
 
 // ============ 6) تفعيل Scalar UI ============
