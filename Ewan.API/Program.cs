@@ -1,12 +1,8 @@
 using Ewan.Application.Interfaces;
 using Ewan.Infrastructure.Persistence;
 using Ewan.Infrastructure.Services;
-using Ewan.Domain.Enums;
-using Ewan.Domain.Entities;
-using Ewan.Application.DTOs.Banners;
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +23,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
 
-builder.Services.AddValidatorsFromAssembly(typeof(UpsertBannerRequestValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(Ewan.Application.DTOs.Banners.UpsertBannerRequestValidator).Assembly);
 builder.Services.AddFluentValidationAutoValidation();
 
 // ============ 3) JWT Authentication (لوحة التحكم) ============
@@ -99,7 +95,13 @@ app.UseForwardedHeaders(forwardedHeadersOptions);
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<EwanDbContext>();
-    db.Database.Migrate();
+
+    // بدّلنا من Migrate() لـ EnsureCreated() مؤقتًا: EnsureCreated بتبني الجداول مباشرة
+    // من شكل الـ Entities في الكود، من غير ما تحتاج ملفات Migrations خالص.
+    // ده بيحل مشكلة "الجدول مش موجود" نهائيًا لمرحلة التطوير الحالية.
+    // (ملحوظة للمستقبل: قبل ما يبقى فيه بيانات حقيقية للعملاء، لازم نرجع لـ Migrate()
+    // العادية عشان نقدر نعمل تعديلات تدريجية على قاعدة البيانات من غير ما نمسحها)
+    db.Database.EnsureCreated();
 
     // لو معندناش أي مستخدم في لوحة التحكم لسه، نعمل SuperAdmin أولي تلقائيًا
     // من غير ده معندكيش أي طريقة تسجلي دخول بيها أول مرة
@@ -110,13 +112,13 @@ using (var scope = app.Services.CreateScope())
 
         if (!string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword))
         {
-            var admin = new AdminUser
+            var admin = new Ewan.Domain.Entities.AdminUser
             {
                 FullName = "Super Admin",
                 Email = seedEmail.ToLower(),
                 Role = Ewan.Domain.Enums.AdminRole.SuperAdmin
             };
-            var hasher = new PasswordHasher<AdminUser>();
+            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Ewan.Domain.Entities.AdminUser>();
             admin.PasswordHash = hasher.HashPassword(admin, seedPassword);
 
             db.AdminUsers.Add(admin);
