@@ -19,6 +19,10 @@ builder.Services.AddDbContext<EwanDbContext>(options =>
 // ============ 2) Services (DI) ============
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IOfferService, OfferService>();
+builder.Services.AddScoped<IServiceItemService, ServiceItemService>();
+builder.Services.AddScoped<IFaqService, FaqService>();
+builder.Services.AddScoped<ILocationService, LocationService>();
+builder.Services.AddScoped<ISiteSettingService, SiteSettingService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
@@ -96,11 +100,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<EwanDbContext>();
 
-    // بدّلنا من Migrate() لـ EnsureCreated() مؤقتًا: EnsureCreated بتبني الجداول مباشرة
-    // من شكل الـ Entities في الكود، من غير ما تحتاج ملفات Migrations خالص.
-    // ده بيحل مشكلة "الجدول مش موجود" نهائيًا لمرحلة التطوير الحالية.
-    // (ملحوظة للمستقبل: قبل ما يبقى فيه بيانات حقيقية للعملاء، لازم نرجع لـ Migrate()
-    // العادية عشان نقدر نعمل تعديلات تدريجية على قاعدة البيانات من غير ما نمسحها)
+    // لسه شغالين بـ EnsureCreated() مؤقتًا لحد ما نخلص باقي الموديولات، وبعدين
+    // هنعمل Migration واحدة نهائية شاملة ونرجع لـ Migrate() العادية مرة واحدة
     db.Database.EnsureCreated();
 
     // لو معندناش أي مستخدم في لوحة التحكم لسه، نعمل SuperAdmin أولي تلقائيًا
