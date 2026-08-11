@@ -2,10 +2,11 @@ using Ewan.Application.Interfaces;
 using Ewan.Infrastructure.Persistence;
 using Ewan.Infrastructure.Services;
 using Ewan.Domain.Enums;
-using FluentValidation;
-using Ewan.Application.DTOs.Auth;
 using Ewan.Domain.Entities;
+using Ewan.Application.DTOs.Banners;
+using FluentValidation;
 using FluentValidation.AspNetCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
 
-builder.Services.AddValidatorsFromAssembly(typeof(Ewan.Application.DTOs.Banners.UpsertBannerRequestValidator).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(UpsertBannerRequestValidator).Assembly);
 builder.Services.AddFluentValidationAutoValidation();
 
 // ============ 3) JWT Authentication (لوحة التحكم) ============
@@ -104,8 +105,8 @@ using (var scope = app.Services.CreateScope())
     // من غير ده معندكيش أي طريقة تسجلي دخول بيها أول مرة
     if (!db.AdminUsers.Any())
     {
-        var seedEmail = builder.Configuration["SeedAdmin:Email"];
-        var seedPassword = builder.Configuration["SeedAdmin:Password"];
+        var seedEmail = builder.Configuration["SeedAdmin:Email"]?.Trim();
+        var seedPassword = builder.Configuration["SeedAdmin:Password"]?.Trim();
 
         if (!string.IsNullOrWhiteSpace(seedEmail) && !string.IsNullOrWhiteSpace(seedPassword))
         {
@@ -113,9 +114,9 @@ using (var scope = app.Services.CreateScope())
             {
                 FullName = "Super Admin",
                 Email = seedEmail.ToLower(),
-                Role = AdminRole.SuperAdmin
+                Role = Ewan.Domain.Enums.AdminRole.SuperAdmin
             };
-            var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Ewan.Domain.Entities.AdminUser>();
+            var hasher = new PasswordHasher<AdminUser>();
             admin.PasswordHash = hasher.HashPassword(admin, seedPassword);
 
             db.AdminUsers.Add(admin);
