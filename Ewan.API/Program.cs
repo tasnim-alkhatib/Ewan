@@ -23,6 +23,8 @@ builder.Services.AddScoped<IServiceItemService, ServiceItemService>();
 builder.Services.AddScoped<IFaqService, FaqService>();
 builder.Services.AddScoped<ILocationService, LocationService>();
 builder.Services.AddScoped<ISiteSettingService, SiteSettingService>();
+builder.Services.AddScoped<IInquiryService, InquiryService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IFileStorageService, LocalFileStorageService>();
 // سيب باقي الـ Services هنا لما تضيفها: IServiceItemService, IInquiryService...
