@@ -14,7 +14,7 @@ namespace Ewan.Domain.Entities
         public string? DescriptionAr { get; set; }
         public string? DescriptionEn { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
-        public string Slug { get; set; } = string.Empty;
+        public string Slug { get; set; } = string.Empty; // رابط الصفحة الخاصة بالخدمة
         public int SortOrder { get; set; }
     }
 }

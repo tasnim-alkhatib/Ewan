@@ -13,16 +13,16 @@ namespace Ewan.Domain.Entities
         public string? Email { get; set; }
         public string? Message { get; set; }
 
-        public Sector? Sector { get; set; }
-        public InquirySource Source { get; set; }
+        public Sector? Sector { get; set; } // القطاع اللي العميل مهتم بيه , لو متاح
+        public InquirySource Source { get; set; } // عرف الاستفسار جاي من أنهي صفحة بالظبط، مفيد لتحليل مصادر الطلبات
         public InquiryStatus Status { get; set; } = InquiryStatus.New;
 
-        public int? ServiceItemId { get; set; }
+        public int? ServiceItemId { get; set; } // لو الاستفسار جاي من كارت خدمة أو عرض معين بالذات
         public ServiceItem? ServiceItem { get; set; }
 
-        public int? OfferId { get; set; }
+        public int? OfferId { get; set; } // لو الاستفسار جاي من كارت خدمة أو عرض معين بالذات
         public Offer? Offer { get; set; }
 
-        public string? Notes { get; set; }   // ملاحظات المتابعة من فريق المبيعات في اللوحة
+        public string? Notes { get; set; }   // ملاحظات المتابعة من فريق المبيعات في اللوحة - مش بتظهر للعميل
     }
 }
